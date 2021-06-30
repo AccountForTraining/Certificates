@@ -1,0 +1,143 @@
+# default settings
+MCA_KEYLEN = 4096
+MCA_KEYAGE = 3650
+
+# Alt Subject Name for certificate.
+# for example: 'email:support@demo.lab,DNS:CA,DNS:CA.demo.lab'
+#SSLSAN = 'email:support@demo.lab,DNS:CA,DNS:CA.demo.lab'
+SSLSAN = ${ENV::SSLSAN}
+
+default_md = sha512
+
+cert = public.pem
+key = private.pem
+directory = .
+
+[ ca ]
+#man ca
+default_ca = CA_default
+
+[ CA_default ]
+dir               = ./${directory}
+certs             = $dir/certs
+crl_dir           = $dir/crl
+new_certs_dir     = $dir/newcerts
+database          = $dir/index.txt
+serial            = $dir/serial
+RANDFILE          = $dir/private/.rand
+
+# The root key and root certificate.
+ private_key       = $dir/${key}
+ certificate       = $dir/${cert}
+
+# For certificate revocation lists.
+ crlnumber         = $dir/crlnumber
+ crl               = $dir/crl/ca.crl.pem
+ crl_extensions    = crl_ext
+ default_crl_days  = 30
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+  default_md        = ${default_md}
+
+  name_opt          = ca_default
+  cert_opt          = ca_default
+  default_days      = ${MCA_KEYAGE}
+  preserve          = no
+  policy            = policy_strict
+
+ [ policy_strict ]
+countryName             = match
+stateOrProvinceName     = match
+organizationName        = match
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ policy_loose ]
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+default_bits        = ${MCA_KEYLEN}
+subjectAltName      = $SSLSAN
+distinguished_name  = req_distinguished_name
+string_mask         = utf8only
+
+default_md          = ${default_md}
+
+x509_extensions     = v3_ca
+
+[ req_distinguished_name ]
+countryName                     = Country Name (2 letter code)
+countryName_default             = RU
+
+stateOrProvinceName             = State or Province Name
+stateOrProvinceName_default     = Russian
+
+localityName                    = Locality Name
+localityName_default            = Moscow
+
+organizationName                = Organization Name
+organizationName_default        = Slava Ukraine
+
+organizationalUnitName          = Organizational Unit Name
+organizationalUnitName_default  = IT
+
+commonName                      = Common Name
+
+emailAddress                    = Email Address
+emailAddress_default            = support@demo.lab
+
+
+# critical
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+subjectAltName = $SSLSAN
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = CA:true, pathlen:2
+keyUsage = cRLSign, keyCertSign, digitalSignature
+
+[ v3_intermediate_ca ]
+subjectKeyIdentifier = hash
+subjectAltName = $SSLSAN
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = CA:true, pathlen:1
+keyUsage = cRLSign, keyCertSign, digitalSignature
+
+[ server_cert ]
+basicConstraints = CA:FALSE
+nsCertType = server
+nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier = hash
+subjectAltName = $SSLSAN
+authorityKeyIdentifier = keyid,issuer:always
+keyUsage = keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth, emailProtection, codeSigning, ipsecEndSystem, ipsecTunnel, ipsecUser, timeStamping
+
+[ usr_cert ]
+basicConstraints = CA:FALSE
+nsCertType = client, email
+nsComment = "OpenSSL Generated Client Certificate"
+subjectKeyIdentifier = hash
+subjectAltName = $SSLSAN
+authorityKeyIdentifier = keyid,issuer
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth, emailProtection
+
+[ crl_ext ]
+# Extension for CRLs (`man x509v3_config`).
+authorityKeyIdentifier=keyid:always
+
+[ ocsp ]
+# Extension for OCSP signing certificates (`man ocsp`).
+basicConstraints = CA:FALSE
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+keyUsage = critical, digitalSignature
+extendedKeyUsage = OCSPSigning

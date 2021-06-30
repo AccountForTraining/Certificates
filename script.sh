@@ -42,26 +42,46 @@ create_files () {
   echo 01 > serial
 }
 
-
-for cert in ${certs[@]}
-do
-  work_dir="$(pwd)/${cert}"
+preparation_folder () {
+  work_dir="$(pwd)/${1}"
   mkdir $work_dir && cd $work_dir
   cp ${home_dir}/openssl.cnf .
   create_files
   openssl genrsa -out private.pem &> /dev/null
+}
 
-  if [[ $cert == "CA" ]]; then
-    create_certificate "v3_ca" "CA" "-x509"
-  elif [[ $cert == "intermediate" || $cert == "squid" ]]; then
-    create_certificate "v3_intermediate_ca" ${cert} "-new"
-    cd ../CA
-    sign_certificate "v3_intermediate_ca"
-  else
-    create_certificate "server_cert" ${cert} "-new"
-    cd ../intermediate
-    sign_certificate "server_cert"
-  fi
 
+root=CA
+
+intermediates=(intermediate proxy)
+
+server_certs=(iwtm iwtm-node mail)
+
+
+# Main code
+
+# ----- generate CA -----
+preparation_folder CA
+create_certificate "v3_ca" "CA" "-x509"
+cd $certs_dir
+
+# ----- generate intermediate -----
+for cert in ${intermediates[@]}
+do
+  preparation_folder $cert
+  create_certificate "v3_intermediate_ca" ${cert} "-new"
+  cd ../${root}
+  sign_certificate "v3_intermediate_ca"
+  cd $certs_dir
+done
+
+
+for cert in ${server_certs[@]}
+do
+  preparation_folder $cert
+  
+  create_certificate "server_cert" ${cert} "-new"
+  cd ../${intermediates[0]}
+  sign_certificate "server_cert"
   cd $certs_dir
 done
