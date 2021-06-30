@@ -1,11 +1,23 @@
 #/bin/bash
-certs_dir="/etc/pki1/"
-home_dir=$(pwd)
+
+# user preferences
+
+root=CA
+intermediates=(intermediate proxy)
+server_certs=(iwtm iwtm-node mail)
+
+certs_dir="/etc/pki/"
 
 value_subj="/C=RU/ST=Moscow\
 /L=Moscow/O=WunderWafli\
 /OU=IT/CN=?\
 /emailAddress=supoort@demo.lab"
+
+
+#=============================
+
+
+home_dir=$(pwd)
 
 if ! [[ -d $certs_dir ]]; then
   mkdir -p $certs_dir
@@ -49,14 +61,6 @@ preparation_folder () {
   create_files
   openssl genrsa -out private.pem &> /dev/null
 }
-
-
-root=CA
-
-intermediates=(intermediate proxy)
-
-server_certs=(iwtm iwtm-node mail)
-
 
 # Main code
 
