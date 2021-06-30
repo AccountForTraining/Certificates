@@ -1,5 +1,7 @@
 #/bin/bash
 
+#Author: Skrylnikov Vhacheslav
+
 # user preferences
 
 root=CA
